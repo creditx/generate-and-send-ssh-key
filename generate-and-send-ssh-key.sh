@@ -3,13 +3,61 @@
 # define settings here
 KEYSIZE=2048
 PASSPHRASE=
-FILENAME=~/.ssh/id_test
+FILENAME=~/.ssh/id_rsa
 KEYTYPE=rsa
-HOST=host
-USER=username
+USER=$USER
 
-# use "-p <nr>" if the ssh-server is listening on a different port
-SSH_OPTS=
+while [[ $# > 0 ]]
+do
+    key="$1"
+    while [[ ${key+x} ]]
+    do
+        case $key in
+            -u*|--user)
+                USER="$2"
+                shift # option has parameter
+                ;;
+            -p*|--password)
+                PASSPHRASE="$2"
+                shift # option has parameter
+                ;;
+            -h*|--host)
+                HOST="$2"
+                shift # option has been fully handled
+                ;;
+            -f*|--file)
+                FILENAME="$2"
+                shift # option has been fully handled
+                ;;
+            -P*|--port)
+                SSH_OPTS="-p $2"
+                shift # option has been fully handled
+                ;;
+            -k*|--keysize)
+                KEYSIZE="-p $2"
+                shift # option has been fully handled
+                ;;
+            -t*|--keytype)
+                KEYTYPE="-p $2"
+                shift # option has been fully handled
+                ;;
+            -e=*)
+                EXAMPLE="${key#*=}"
+                break # option has been fully handled
+                ;;
+            *)
+                # unknown option
+                echo Unknown option: $key #1>&2
+                exit 10 # either this: my preferred way to handle unknown options
+                break # or this: do this to signal the option has been handled (if exit isn't used)
+                ;;
+        esac
+        # prepare for next option in this key, if any
+        [[ "$key" = -? || "$key" == --* ]] && unset key || key="${key/#-?/-}"
+    done
+    shift # option(s) fully processed, proceed to next input argument
+done
+
 
 #
 # NO MORE CONFIG SETTING BELOW THIS LINE
@@ -31,11 +79,13 @@ fi
 
 # perform the actual work
 echo Creating a new key using $SSH-KEYGEN
-$SSH_KEYGEN -t $KEYTYPE -b $KEYSIZE  -f $FILENAME -N "$PASSPHRASE"
-RET=$?
-if [ $RET -ne 0 ];then
-    echo ssh-keygen failed: $RET
-    exit 1
+if [ ! -f $FILENAME ];then
+    $SSH_KEYGEN -t $KEYTYPE -b $KEYSIZE  -f $FILENAME -N "$PASSPHRASE"
+    RET=$?
+    if [ $RET -ne 0 ];then
+        echo ssh-keygen failed: $RET
+        exit 1
+    fi
 fi
 
 echo Adjust permissions of generated key-files locally
