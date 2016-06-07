@@ -7,6 +7,11 @@ FILENAME=~/.ssh/id_rsa
 KEYTYPE=rsa
 USER=$USER
 
+if [[ $# < 1 ]];then
+    echo "valid params is -u(--user) -p(--password) -f(--file) -H(--host) -P(--port) -k(--keysize) -t(--keytype)"
+    exit 2
+fi
+
 while [[ $# > 0 ]]
 do
     key="$1"
@@ -21,32 +26,33 @@ do
                 PASSPHRASE="$2"
                 shift # option has parameter
                 ;;
-            -h*|--host)
+            -H*|--host)
                 HOST="$2"
-                shift # option has been fully handled
+                shift # option has parameter
                 ;;
             -f*|--file)
                 FILENAME="$2"
-                shift # option has been fully handled
+                shift # option has parameter
                 ;;
             -P*|--port)
                 SSH_OPTS="-p $2"
-                shift # option has been fully handled
+                shift # option has parameter
                 ;;
             -k*|--keysize)
                 KEYSIZE="-p $2"
-                shift # option has been fully handled
+                shift # option has parameter
                 ;;
             -t*|--keytype)
                 KEYTYPE="-p $2"
-                shift # option has been fully handled
+                shift # option has parameter
                 ;;
-            -e=*)
+            -e=|*)
                 EXAMPLE="${key#*=}"
                 break # option has been fully handled
                 ;;
             *)
                 # unknown option
+                echo "valid params is -u(--user) -p(--password) -f(--file) -H(--host) -P(--port) -k(--keysize) -t(--keytype)"
                 echo Unknown option: $key #1>&2
                 exit 10 # either this: my preferred way to handle unknown options
                 break # or this: do this to signal the option has been handled (if exit isn't used)
